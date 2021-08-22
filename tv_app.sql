@@ -78,8 +78,92 @@ INSERT INTO series (title, released_year, genre) VALUES
     (13,3,8.0),(13,4,7.2),
     (14,2,8.5),(14,3,8.9),(14,4,8.9);
 
+-- first join example 
+-- combines review with the series id it is associated with 
+SELECT * FROM series;
 
+SELECT * FROM reviews;
 
+SELECT 
+title, 
+rating 
+FROM series
+JOIN reviews 
+    ON series.id = reviews.series_id;
 
+-- second join example 
+-- AVG rating, this join statement groups the data by series id and orders it by the avg rating of the show. It joins the series id to the reviews series id 
+SELECT 
+    title, 
+    AVG(rating) AS 'Average Rating' 
+    FROM series
+JOIN reviews 
+    ON series.id = reviews.series_id
+GROUP BY series.id
+ORDER BY AVG(rating);
 
+-- third join example 
+-- first name of reviewer and last name. Then, join the reviewer to all of their ratings 
+SELECT * FROM reviewers;
 
+SELECT * FROM reviews;
+
+SELECT 
+    first_name, 
+    last_name, 
+    rating 
+FROM reviewers
+JOIN reviews 
+    ON reviews.id = reviews.reviewer_id;
+    
+-- fourth join example 
+-- identify the unreviewed series 
+SELECT 
+    title AS 'Unreviewed series', 
+    genre
+FROM series 
+LEFT JOIN reviews 
+    ON series.id = reviews.series_id
+WHERE rating IS NULL;
+
+-- fifth join example 
+-- Grab the genre of all shows, group them and average their rating. Also we get to see round in action as we round our data to 2 decimals rather than the default 4  
+SELECT 
+    genre, 
+    ROUND(AVG(rating), 2) AS 'AVG rating'  
+FROM series 
+INNER JOIN reviews -- we use inner join to avoid adding the null data of series/reviews to our actual data 
+    ON series.id = reviews.series_id
+GROUP BY genre; 
+    
+-- sixth join example 
+-- show our reviewers names, count their reviews, display min review, display max reviews, display avg rating, and display whether they are active or inactive reviewers. 
+SELECT 
+    first_name, 
+    last_name, 
+    COUNT(rating) AS 'Count', 
+    IFNULL(MIN(rating), 0) AS 'Min', 
+    IFNULL(MAX(rating), 0) AS 'max', 
+    ROUND(IFNULL(AVG(rating), 0), 2) AS 'AVG',
+    CASE 
+        WHEN COUNT(rating) >= 10 THEN 'Power User'
+        WHEN COUNT(rating) > 0 THEN 'Active'
+        ELSE 'Inactive'
+    END AS 'Status'
+FROM reviewers 
+LEFT JOIN reviews 
+    ON reviewers.id = reviews.reviewer_id
+GROUP BY reviewers.id;
+
+-- Seventh join example
+-- putting all 3 tables together, print the title, the rating, and then the reviewer, concat the reviewer 
+SELECT 
+    title,
+    rating,
+    CONCAT(first_name, ' ', last_name) AS 'Reviewer'
+FROM reviewers
+INNER JOIN reviews    
+    ON reviewers.id = reviews.reviewer_id
+INNER JOIN series 
+    ON series.id = reviews.series_id
+ORDER BY title;
